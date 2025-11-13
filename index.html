@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SteelForge - Metal Dormitory Furniture Manufacturer</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-dark: #1a1a1a;
+            --metal-gray: #2c3e50;
+            --rust-orange: #d35400;
+            --steel-blue: #34495e;
+            --accent-yellow: #f39c12;
+            --white: #ecf0f1;
+            --text-light: #bdc3c7;
+            --success: #27ae60;
+            --danger: #e74c3c;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2c3e50 100%);
+            color: var(--white);
+            overflow-x: hidden;
+        }
+
+        /* Admin Panel Styles */
+        .admin-panel {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 400px;
+            height: 100vh;
+            background: rgba(26, 26, 26, 0.98);
+            backdrop-filter: blur(10px);
+            z-index: 10000;
+            transition: right 0.3s;
+            overflow-y: auto;
+            border-left: 2px solid var(--rust-orange);
+        }
+
+        .admin-panel.active {
+            right: 0;
+        }
+
+        .admin-toggle {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background: var(--rust-orange);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 9999;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .admin-toggle:hover {
+            transform: scale(1.1);
+            background: var(--accent-yellow);
+        }
+
+        .admin-header {
+            padding: 1.5rem;
+            background: var(--metal-gray);
+            border-bottom: 2px solid var(--rust-orange);
+        }
+
+        .admin-content {
+            padding: 1.5rem;
+        }
+
+        .admin-section {
+            margin-bottom: 2rem;
+        }
+
+        .admin-section h3 {
+            color: var(--accent-yellow);
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .admin-input {
+            width: 100%;
+            padding: 0.8rem;
+            background: var(--metal-gray);
+            border: 1px solid var(--steel-blue);
+            color: var(--white);
+            border-radius: 5px;
+            margin-bottom: 1rem;
+            transition: all 0.3s;
+        }
+
+        .admin-input:focus {
+            outline: none;
+            border-color: var(--rust-orange);
+            box-shadow: 0 0 10px rgba(211, 84, 0, 0.3);
+        }
+
+        .admin-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .admin-btn {
+            padding: 0.8rem 1.5rem;
+            background: var(--rust-orange);
+            color: var(--white);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-right: 0.5rem;
+        }
+
+        .admin-btn:hover {
+            background: var(--accent-yellow);
+            transform: translateY(-2px);
+        }
+
+        .admin-btn-danger {
+            background: var(--danger);
+        }
+
+        .admin-btn-success {
+            background: var(--success);
+        }
+
+        /* Login Modal */
+        .login-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10001;
+        }
+
+        .login-modal.active {
+            display: flex;
+        }
+
+        .login-form {
+            background: var(--metal-gray);
+            padding: 2rem;
+            border-radius: 10px;
+            border: 2px solid var(--rust-orange);
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .login-form h2 {
+            color: var(--accent-yellow);
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        /* Main Styles */
+        .loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--primary-dark);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s;
+        }
+
+        .loader.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .gear {
+            width: 60px;
+            height: 60px;
+            border: 4px solid var(--rust-orange);
+            border-radius: 50%;
+            position: relative;
+            animation: rotate 2s linear infinite;
+        }
+
+        .gear::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 20px;
+            background: var(--rust-orange);
+            clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(26, 26, 26, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            padding: 1rem 2rem;
+            border-bottom: 2px solid var(--rust-orange);
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--rust-orange);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo::before {
+            content: '⚙';
+            font-size: 2rem;
+            animation: rotate 4s linear infinite;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--white);
+            text-decoration: none;
+            transition: color 0.3s;
+            position: relative;
+        }
+
+        .nav-links a:hover {
+            color: var(--rust-orange);
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--rust-orange);
+            transition: width 0.3s;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .hero {
+            margin-top: 80px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.1;
+            background-image: 
+                repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,255,255,.1) 35px, rgba(255,255,255,.1) 70px),
+                repeating-linear-gradient(-45deg, transparent, transparent 35px, rgba(255,255,255,.05) 35px, rgba(255,255,255,.05) 70px);
+        }
+
+        .hero-content {
+            text-align: center;
+            z-index: 1;
+            padding: 2rem;
+        }
+
+        .hero h1 {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            background: linear-gradient(45deg, var(--rust-orange), var(--accent-yellow));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { filter: drop-shadow(0 0 10px var(--rust-orange)); }
+            to { filter: drop-shadow(0 0 20px var(--accent-yellow)); }
+        }
+
+        .hero p {
+            font-size: 1.5rem;
+            color: var(--text-light);
+            margin-bottom: 2rem;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary {
+            background: var(--rust-orange);
+            color: var(--white);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--white);
+            border: 2px solid var(--rust-orange);
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(211, 84, 0, 0.3);
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .products {
+            padding: 5rem 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 3rem;
+            margin-bottom: 3rem;
+            position: relative;
+            text-transform: uppercase;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 4px;
+            background: var(--rust-orange);
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .product-card {
+            background: rgba(44, 62, 80, 0.3);
+            border: 1px solid var(--steel-blue);
+            border-radius: 10px;
+            overflow: hidden;
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .product-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border-color: var(--rust-orange);
+        }
+
+        .product-image {
+            width: 100%;
+            height: 250px;
+            background: linear-gradient(135deg, var(--metal-gray), var(--steel-blue));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .product-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .product-image::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+            transform: rotate(45deg);
+            transition: all 0.5s;
+        }
+
+        .product-card:hover .product-image::before {
+            animation: shine 0.5s ease-in-out;
+        }
+
+        @keyframes shine {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+
+        .product-info {
+            padding: 1.5rem;
+        }
+
+        .product-name {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--accent-yellow);
+        }
+
+        .product-desc {
+            color: var(--text-light);
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .product-features {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .feature-tag {
+            background: rgba(211, 84, 0, 0.2);
+            color: var(--rust-orange);
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            border: 1px solid var(--rust-orange);
+        }
+
+        .contact {
+            padding: 5rem 2rem;
+            background: rgba(26, 26, 26, 0.5);
+        }
+
+        .contact-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .contact-form {
+            background: rgba(44, 62, 80, 0.3);
+            border: 2px solid var(--steel-blue);
+            border-radius: 10px;
+            padding: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--accent-yellow);
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.8rem;
+            background: var(--metal-gray);
+            border: 1px solid var(--steel-blue);
+            color: var(--white);
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--rust-orange);
+            box-shadow: 0 0 10px rgba(211, 84, 0, 0.3);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        footer {
+            background: var(--primary-dark);
+            padding: 2rem;
+            text-align: center;
+            border-top: 2px solid var(--rust-orange);
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .social-links a {
+            color: var(--text-light);
+            font-size: 1.5rem;
+            transition: color 0.3s;
+        }
+
+        .social-links a:hover {
+            color: var(--rust-orange);
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .admin-panel {
+                width: 100%;
+                right: -100%;
+            }
+
+            .product-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--rust-orange);
+            border-radius: 50%;
+            opacity: 0.3;
+            animation: float 10s infinite linear;
+        }
+
+        @keyframes float {
+            from {
+                transform: translateY(100vh) translateX(0);
+            }
+            to {
+                transform: translateY(-100px) translateX(100px);
+            }
+        }
+
+        .notification {
+            position: fixed;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--success);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 5px;
+            z-index: 10002;
+            display: none;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .notification.show {
+            display: block;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateX(-50%) translateY(-100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loader" id="loader">
+        <div class="gear"></div>
+    </div>
+
+    <!-- Notification -->
+    <div class="notification" id="notification"></div>
+
+    <!-- Admin Toggle Button -->
+    <div class="admin-toggle" onclick="toggleAdminPanel()">
+        <i class="fas fa-cog"></i>
+    </div>
+
+    <!-- Admin Panel -->
+    <div class="admin-panel" id="adminPanel">
+        <div class="admin-header">
+            <h2><i class="fas fa-tools"></i> Admin Panel</h2>
+            <button class="admin-btn admin-btn-danger" onclick="logout()" style="float: right;">Logout</button>
+        </div>
+        <div class="admin-content">
+            <!-- Site Settings -->
+            <div class="admin-section">
+                <h3>Site Settings</h3>
+                <input type="text" class="admin-input" id="adminCompanyName" placeholder="Company Name">
+                <input type="text" class="admin-input" id="adminHeroTitle" placeholder="Hero Title">
+                <textarea class="admin-input admin-textarea" id="adminHeroDesc" placeholder="Hero Description"></textarea>
+                <button class="admin-btn admin-btn-success" onclick="saveSiteSettings()">Save Settings</button>
+            </div>
+
+            <!-- Products Management -->
+            <div class="admin-section">
+                <h3>Products Management</h3>
+                <div id="productsList"></div>
+                <button class="admin-btn" onclick="addNewProduct()">Add New Product</button>
+            </div>
+
+            <!-- Contact Settings -->
+            <div class="admin-section">
+                <h3>Contact Settings</h3>
+                <input type="email" class="admin-input" id="adminEmail" placeholder="Contact Email">
+                <input type="text" class="admin-input" id="adminPhone" placeholder="Phone Number">
+                <input type="text" class="admin-input" id="adminAddress" placeholder="Address">
+                <button class="admin-btn admin-btn-success" onclick="saveContactSettings()">Save Contact</button>
+            </div>
+
+            <!-- Export/Import -->
+            <div class="admin-section">
+                <h3>Data Management</h3>
+                <button class="admin-btn" onclick="exportData()">Export Data</button>
+                <button class="admin-btn" onclick="importData()">Import Data</button>
+                <button class="admin-btn admin-btn-danger" onclick="resetData()">Reset All Data</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div class="login-modal" id="loginModal">
+        <div class="login-form">
+            <h2>Admin Login</h2>
+            <input type="password" class="admin-input" id="adminPassword" placeholder="Enter Password">
+            <button class="admin-btn admin-btn-success" style="width: 100%;" onclick="adminLogin()">Login</button>
+            <p style="text-align: center; margin-top: 1rem; color: var(--text-light);">Default: admin123</p>
+        </div>
+    </div>
+
+    <!-- Floating Particles -->
+    <div class="particles" id="particles"></div>
+
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <a href="#" class="logo" id="siteLogo">SteelForge</a>
+            <ul class="nav-links">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#products">Products</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="hero-bg"></div>
+        <div class="hero-content fade-in">
+            <h1 id="heroTitle">SteelForge Industries</h1>
+            <p id="heroDesc">Premium Metal Dormitory Furniture Manufacturer</p>
+            <div class="cta-buttons">
+                <button class="btn btn-primary" onclick="scrollToSection('products')">View Products</button>
+                <button class="btn btn-secondary" onclick="scrollToSection('contact')">Contact Us</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Products Section -->
+    <section class="products" id="products">
+        <h2 class="section-title fade-in">Our Products</h2>
+        <div class="product-grid" id="productGrid">
+            <!-- Products will be dynamically loaded here -->
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="contact" id="contact">
+        <div class="contact-container">
+            <h2 class="section-title fade-in">Get In Touch</h2>
+            <form class="contact-form fade-in" onsubmit="handleSubmit(event)">
+                <div class="form-group">
+                    <label for="name">Company Name</label>
+                    <input type="text" id="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="message">Message</label>
+                    <textarea id="message" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Send Inquiry</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="social-links">
+                <a href="#" id="footerEmail"><i class="fas fa-envelope"></i></a>
+                <a href="#" id="footerPhone"><i class="fas fa-phone"></i></a>
+                <a href="#"><i class="fab fa-linkedin"></i></a>
+                <a href="#"><i class="fab fa-facebook"></i></a>
+            </div>
+            <p id="footerCopyright">&copy; 2024 SteelForge Industries. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Default Data
+        const defaultData = {
+            siteSettings: {
+                companyName: 'SteelForge',
+                heroTitle: 'SteelForge Industries',
+                heroDesc: 'Premium Metal Dormitory Furniture Manufacturer'
+            },
+            products: [
+                {
+                    id: 1,
+                    name: 'Single Metal Bed',
+                    description: 'Durable single-layer metal bed perfect for dormitories and hostels.',
+                    features: ['Heavy Duty', 'Rust Proof', 'Easy Assembly'],
+                    icon: '🛏️'
+                },
+                {
+                    id: 2,
+                    name: 'Bunk Bed',
+                    description: 'Space-saving double bunk bed ideal for maximizing room capacity.',
+                    features: ['Space Efficient', 'Safety Rails', 'Ladder Included'],
+                    icon: '🛏️🛏️'
+                },
+                {
+                    id: 3,
+                    name: 'Apartment Bed',
+                    description: 'All-in-one apartment bed with integrated storage solutions.',
+                    features: ['Built-in Storage', 'Study Desk', 'Wardrobe'],
+                    icon: '🏠'
+                },
+                {
+                    id: 4,
+                    name: 'Metal Cabinet',
+                    description: 'Secure metal storage cabinets with locking mechanisms.',
+                    features: ['Lockable', 'Ventilated', 'Stackable'],
+                    icon: '🗄️'
+                }
+            ],
+            contact: {
+                email: 'info@steelforge.com',
+                phone: '+86 123 4567 8900',
+                address: 'Shanghai, China'
+            }
+        };
+
+        // Initialize data
+        let siteData = JSON.parse(localStorage.getItem('siteData')) || defaultData;
+        let isAdmin = false;
+
+        // Initialize
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.getElementById('loader').classList.add('hidden');
+            }, 1000);
+            loadSiteContent();
+            createParticles();
+            initScrollAnimations();
+        });
+
+        // Load site content
+        function loadSiteContent() {
+            // Load site settings
+            document.getElementById('siteLogo').textContent = siteData.siteSettings.companyName;
+            document.getElementById('heroTitle').textContent = siteData.siteSettings.heroTitle;
+            document.getElementById('heroDesc').textContent = siteData.siteSettings.heroDesc;
+            document.getElementById('footerCopyright').textContent = `© 2024 ${siteData.siteSettings.companyName}. All rights reserved.`;
+            
+            // Load contact info
+            document.getElementById('footerEmail').href = `mailto:${siteData.contact.email}`;
+            document.getElementById('footerPhone').href = `tel:${siteData.contact.phone}`;
+            
+            // Load products
+            loadProducts();
+            
+            // Load admin panel data
+            if (isAdmin) {
+                loadAdminData();
+            }
+        }
+
+        // Load products
+        function loadProducts() {
+            const productGrid = document.getElementById('productGrid');
+            productGrid.innerHTML = '';
+            
+            siteData.products.forEach(product => {
+                const productCard = document.createElement('div');
+                productCard.className = 'product-card fade-in';
+                productCard.innerHTML = `
+                    <div class="product-image">
+                        <span style="font-size: 4rem;">${product.icon}</span>
+                    </div>
+                    <div class="product-info">
+                        <h3 class="product-name">${product.name}</h3>
+                        <p class="product-desc">${product.description}</p>
+                        <div class="product-features">
+                            ${product.features.map(f => `<span class="feature-tag">${f}</span>`).join('')}
+                        </div>
+                    </div>
+                `;
+                productGrid.appendChild(productCard);
+            });
+        }
+
+        // Admin Functions
+        function toggleAdminPanel() {
+            if (!isAdmin) {
+                document.getElementById('loginModal').classList.add('active');
+            } else {
+                document.getElementById('adminPanel').classList.toggle('active');
+            }
+        }
+
+        function adminLogin() {
+            const password = document.getElementById('adminPassword').value;
+            if (password === 'admin123') {
+                isAdmin = true;
+                document.getElementById('loginModal').classList.remove('active');
+                document.getElementById('adminPanel').classList.add('active');
+                loadAdminData();
+                showNotification('Login successful!');
+            } else {
+                showNotification('Invalid password!', 'error');
+            }
+        }
+
+        function logout() {
+            isAdmin = false;
+            document.getElementById('adminPanel').classList.remove('active');
+            showNotification('Logged out successfully!');
+        }
+
+        function loadAdminData() {
+            // Load site settings
+            document.getElementById('adminCompanyName').value = siteData.siteSettings.companyName;
+            document.getElementById('adminHeroTitle').value = siteData.siteSettings.heroTitle;
+            document.getElementById('adminHeroDesc').value = siteData.siteSettings.heroDesc;
+            
+            // Load contact settings
+            document.getElementById('adminEmail').value = siteData.contact.email;
+            document.getElementById('adminPhone').value = siteData.contact.phone;
+            document.getElementById('adminAddress').value = siteData.contact.address;
+            
+            // Load products
+            loadProductsList();
+        }
+
+        function loadProductsList() {
+            const productsList = document.getElementById('productsList');
+            productsList.innerHTML = '';
+            
+            siteData.products.forEach((product, index) => {
+                const productItem = document.createElement('div');
+                productItem.style.cssText = 'background: var(--metal-gray); padding: 1rem; margin-bottom: 1rem; border-radius: 5px;';
+                productItem.innerHTML = `
+                    <h4 style="color: var(--accent-yellow); margin-bottom: 0.5rem;">${product.name}</h4>
+                    <input type="text" class="admin-input" value="${product.name}" onchange="updateProduct(${index}, 'name', this.value)">
+                    <textarea class="admin-input admin-textarea" onchange="updateProduct(${index}, 'description', this.value)">${product.description}</textarea>
+                    <button class="admin-btn admin-btn-danger" onclick="deleteProduct(${index})">Delete</button>
+                `;
+                productsList.appendChild(productItem);
+            });
+        }
+
+        function saveSiteSettings() {
+            siteData.siteSettings.companyName = document.getElementById('adminCompanyName').value;
+            siteData.siteSettings.heroTitle = document.getElementById('adminHeroTitle').value;
+            siteData.siteSettings.heroDesc = document.getElementById('adminHeroDesc').value;
+            
+            localStorage.setItem('siteData', JSON.stringify(siteData));
+            loadSiteContent();
+            showNotification('Settings saved successfully!');
+        }
+
+        function saveContactSettings() {
+            siteData.contact.email = document.getElementById('adminEmail').value;
+            siteData.contact.phone = document.getElementById('adminPhone').value;
+            siteData.contact.address = document.getElementById('adminAddress').value;
+            
+            localStorage.setItem('siteData', JSON.stringify(siteData));
+            loadSiteContent();
+            showNotification('Contact settings saved!');
+        }
+
+        function updateProduct(index, field, value) {
+            siteData.products[index][field] = value;
+            localStorage.setItem('siteData', JSON.stringify(siteData));
+            loadSiteContent();
+        }
+
+        function addNewProduct() {
+            const newProduct = {
+                id: Date.now(),
+                name: 'New Product',
+                description: 'Product description',
+                features: ['Feature 1', 'Feature 2'],
+                icon: '📦'
+            };
+            siteData.products.push(newProduct);
+            localStorage.setItem('siteData', JSON.stringify(siteData));
+            loadProductsList();
+            loadSiteContent();
+            showNotification('Product added!');
+        }
+
+        function deleteProduct(index) {
+            if (confirm('Are you sure you want to delete this product?')) {
+                siteData.products.splice(index, 1);
+                localStorage.setItem('siteData', JSON.stringify(siteData));
+                loadProductsList();
+                loadSiteContent();
+                showNotification('Product deleted!');
+            }
+        }
+
+        function exportData() {
+            const dataStr = JSON.stringify(siteData, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            const exportFileDefaultName = 'website-data.json';
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+            
+            showNotification('Data exported!');
+        }
+
+        function importData() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = e => {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                reader.onload = event => {
+                    try {
+                        siteData = JSON.parse(event.target.result);
+                        localStorage.setItem('siteData', JSON.stringify(siteData));
+                        loadSiteContent();
+                        if (isAdmin) loadAdminData();
+                        showNotification('Data imported successfully!');
+                    } catch (error) {
+                        showNotification('Invalid file format!', 'error');
+                    }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+
+        function resetData() {
+            if (confirm('Are you sure you want to reset all data to default?')) {
+                localStorage.removeItem('siteData');
+                siteData = JSON.parse(JSON.stringify(defaultData));
+                loadSiteContent();
+                if (isAdmin) loadAdminData();
+                showNotification('Data reset to default!');
+            }
+        }
+
+        // Utility Functions
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.style.background = type === 'error' ? 'var(--danger)' : 'var(--success)';
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        function scrollToSection(sectionId) {
+            document.getElementById(sectionId).scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function handleSubmit(event) {
+            event.preventDefault();
+            showNotification('Message sent successfully! We will contact you soon.');
+            event.target.reset();
+        }
+
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            for (let i = 0; i < 20; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 10 + 's';
+                particle.style.animationDuration = (10 + Math.random() * 10) + 's';
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        function initScrollAnimations() {
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, observerOptions);
+
+            document.querySelectorAll('.fade-in').forEach(el => {
+                observer.observe(el);
+            });
+        }
+    </script>
+</body>
+</html>
